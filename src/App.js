@@ -1,15 +1,36 @@
 import "./App.css";
 import { useState } from "react";
-const initialItems = [
-  { id: 1, description: "Passports", quantity: 2, packed: false },
-  { id: 2, description: "Socks", quantity: 12, packed: true },
-];
+// const initialItems = [
+//   { id: 1, description: "Passports", quantity: 2, packed: false },
+//   { id: 2, description: "Socks", quantity: 12, packed: true },
+// ];
 function App() {
+  const [items, setItems] = useState([]);
+  // Handle Add Items
+  function handleAddItems(item) {
+    setItems(() => [...items, item]);
+  }
+  // Handle delete item
+  function handleDeleteItem(id) {
+    setItems((items) => items.filter((item) => item.id !== id));
+  }
+  // Handle toggle item
+  function handleToggleItem(id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <PackingList />
+      <Form onAddItems={handleAddItems} />
+      <PackingList
+        items={items}
+        onDeleteItem={handleDeleteItem}
+        onToggleItem={handleToggleItem}
+      />
       <State />
     </div>
   );
@@ -20,20 +41,22 @@ function Logo() {
   return <h1> 🌴Far Away💼</h1>;
 }
 // Form
-function Form() {
+function Form({ onAddItems }) {
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
-  function handelSubmit(e) {
+
+  function handleSubmit(e) {
     e.preventDefault();
     if (!description) return;
     // console.log(e.target.elements);
     const newItem = { description, quantity, packed: false, id: Date.now() };
-    console.log(newItem);
+    // console.log(newItem);
+    onAddItems(newItem);
     setDescription("");
     setQuantity(1);
   }
   return (
-    <form className="add-form" onSubmit={handelSubmit}>
+    <form className="add-form" onSubmit={handleSubmit}>
       <h3>What do you need to your 🤩 trip?</h3>
       <select
         value={quantity}
@@ -56,12 +79,17 @@ function Form() {
   );
 }
 // PackingList
-function PackingList() {
+function PackingList({ items, onDeleteItem, onToggleItem }) {
   return (
     <div className="list">
       <ul>
-        {initialItems.map((item, index) => (
-          <Item item={item} key={item.id}></Item>
+        {items.map((item) => (
+          <Item
+            onDeleteItem={onDeleteItem}
+            item={item}
+            key={item.id}
+            onToggleItem={onToggleItem}
+          ></Item>
         ))}
       </ul>
     </div>
@@ -76,13 +104,14 @@ function State() {
   );
 }
 // Item
-function Item({ item }) {
+function Item({ item, onDeleteItem, onToggleItem }) {
   return (
     <li>
+      <input type="checkbox" onChange={() => onToggleItem(item.id)} />
       <span style={item.packed ? { textDecoration: "line-through" } : {}}>
         {item.quantity} {item.description}
       </span>
-      <button>❌</button>
+      <button onClick={() => onDeleteItem(item.id)}>❌</button>
     </li>
   );
 }
