@@ -23,6 +23,15 @@ function App() {
       )
     );
   }
+  // Handle clear list
+  function handleClearList() {
+    const confirm = window.confirm(
+      "Are you sure you want to delete all items?"
+    );
+    if (confirm) {
+      setItems([]);
+    }
+  }
   return (
     <div className="app">
       <Logo />
@@ -31,6 +40,7 @@ function App() {
         items={items}
         onDeleteItem={handleDeleteItem}
         onToggleItem={handleToggleItem}
+        onClearList={handleClearList}
       />
       <State items={items} />
     </div>
@@ -39,7 +49,7 @@ function App() {
 export default App;
 // Logo
 function Logo() {
-  return <h1> 🌴Far Away💼</h1>;
+  return <h1> Far Away</h1>;
 }
 // Form
 function Form({ onAddItems }) {
@@ -80,11 +90,22 @@ function Form({ onAddItems }) {
   );
 }
 // PackingList
-function PackingList({ items, onDeleteItem, onToggleItem }) {
+function PackingList({ items, onDeleteItem, onToggleItem, onClearList }) {
+  const [sortBy, setSortBy] = useState("input");
+  let sortedItems;
+  if (sortBy === "input") sortedItems = items;
+  if (sortBy === "description")
+    sortedItems = items
+      .slice()
+      .sort((a, b) => a.description.localeCompare(b.description));
+  if (sortBy === "packed")
+    sortedItems = items
+      .slice()
+      .sort((a, b) => Number(a.packed) - Number(b.packed));
   return (
     <div className="list">
       <ul>
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <Item
             onDeleteItem={onDeleteItem}
             item={item}
@@ -93,6 +114,14 @@ function PackingList({ items, onDeleteItem, onToggleItem }) {
           ></Item>
         ))}
       </ul>
+      <div className="actions">
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value="input">Sort by input order</option>
+          <option value="description">Sort by description</option>
+          <option value="packed">Sort by packed status</option>
+        </select>
+        <button onClick={onClearList}>CLEAR LIST</button>
+      </div>
     </div>
   );
 }
@@ -119,10 +148,19 @@ function State({ items }) {
     <footer className="stats">
       <em>
         {percentage === 100
-          ? "You are ready to go ✈️ "
-          : `👜 You have ${numItems} items on your list, and you already packed
-        ${numPacked} (${percentage}%)`}
+          ? "You are ready to go ✈️"
+          : `👜 You have ${numItems} items on your list, and you already packed ${numPacked} (${percentage}%)`}
       </em>
+      <br />
+      <small>
+        {numItems === 0
+          ? "Tip: Add items to start your packing list."
+          : percentage === 0
+          ? "Tip: Start packing by checking off items as you go!"
+          : percentage < 100
+          ? "Keep going! You're making progress."
+          : "All items packed. Double-check if you missed anything!"}
+      </small>
     </footer>
   );
 }
